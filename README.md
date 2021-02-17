@@ -8,20 +8,20 @@ This module lets you authenticate HTTP requests using JWT tokens in your Go Prog
 
 ## Key Features
 
-* Ability to **check the `Authorization` header for a JWT**
-* **Decode the JWT** and set the content of it to the request context
+- Ability to **check the `Authorization` header for a JWT**
+- **Decode the JWT** and set the content of it to the request context
 
 ## Installing
 
-````bash
+```bash
 go get github.com/auth0/go-jwt-middleware
-````
+```
 
 ## Using it
 
 You can use `jwtmiddleware` with default `net/http` as follows.
 
-````go
+```go
 // main.go
 package main
 
@@ -38,7 +38,7 @@ var myHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
   user := r.Context().Value("user")
   fmt.Fprintf(w, "This is an authenticated request")
   fmt.Fprintf(w, "Claim content:\n")
-  for k, v := range user.(*jwt.Token).Claims.(jwt.MapClaims) {
+  for k, v := range user.(*jwt.Token).Claims.(jwt.StandardClaims) {
     fmt.Fprintf(w, "%s :\t%#v\n", k, v)
   }
 })
@@ -57,11 +57,11 @@ func main() {
   app := jwtMiddleware.Handler(myHandler)
   http.ListenAndServe("0.0.0.0:3000", app)
 }
-````
+```
 
 You can also use it with Negroni as follows:
 
-````go
+```go
 // main.go
 package main
 
@@ -80,7 +80,7 @@ var myHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
   user := r.Context().Value("user");
   fmt.Fprintf(w, "This is an authenticated request")
   fmt.Fprintf(w, "Claim content:\n")
-  for k, v := range user.(*jwt.Token).Claims.(jwt.MapClaims) {
+  for k, v := range user.(*jwt.Token).Claims.(jwt.StandardClaims) {
     fmt.Fprintf(w, "%s :\t%#v\n", k, v)
   }
 })
@@ -105,11 +105,11 @@ func main() {
   http.Handle("/", r)
   http.ListenAndServe(":3001", nil)
 }
-````
+```
 
 ## Options
 
-````go
+```go
 type Options struct {
   // The function that will return the Key to validate the JWT.
   // It can be either a shared secret or a public key.
@@ -129,7 +129,7 @@ type Options struct {
   // Default: FromAuthHeader (i.e., from Authorization header as bearer token)
   Extractor TokenExtractor
   // Debug flag turns on debugging output
-  // Default: false  
+  // Default: false
   Debug bool
   // When set, all requests with the OPTIONS method will use authentication
   // Default: false
@@ -139,8 +139,12 @@ type Options struct {
   // Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
   // Default: nil
   SigningMethod jwt.SigningMethod
+  // Optional: (custom Claims)
+	// if not set we'll use StandardClaims
+	// Default: nil,
+	Claims jwt.Claims
 }
-````
+```
 
 ### Token Extraction
 
@@ -179,17 +183,16 @@ jwtmiddleware.New(jwtmiddleware.Options{
 
 You can check out working examples in the [examples folder](https://github.com/auth0/go-jwt-middleware/tree/master/examples)
 
-
 ## What is Auth0?
 
 Auth0 helps you to:
 
-* Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders), either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce, amont others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory, ADFS or any SAML Identity Provider**.
-* Add authentication through more traditional **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
-* Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with the same user.
-* Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and **flow the user identity** securely.
-* Analytics of how, when and where users are logging in.
-* Pull data from other sources and add it to the user profile, through [JavaScript rules](https://docs.auth0.com/rules).
+- Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders), either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce, amont others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory, ADFS or any SAML Identity Provider**.
+- Add authentication through more traditional **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
+- Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with the same user.
+- Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and **flow the user identity** securely.
+- Analytics of how, when and where users are logging in.
+- Pull data from other sources and add it to the user profile, through [JavaScript rules](https://docs.auth0.com/rules).
 
 ## Create a free Auth0 Account
 

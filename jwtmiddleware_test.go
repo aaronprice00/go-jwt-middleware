@@ -49,12 +49,12 @@ func TestAuthenticatedRequest(t *testing.T) {
 	}
 	Convey("Simple authenticated requests", t, func() {
 		Convey("Authenticated GET to / path should return a 200 response", func() {
-			w := makeAuthenticatedRequest("GET", "/", jwt.MapClaims{"foo": "bar"}, nil)
+			w := makeAuthenticatedRequest("GET", "/", jwt.StandardClaims{Audience: []string{"bar"}}, nil)
 			So(w.Code, ShouldEqual, http.StatusOK)
 		})
 		Convey("Authenticated GET to /protected path should return a 200 response if expected algorithm is not specified", func() {
 			var expectedAlgorithm jwt.SigningMethod = nil
-			w := makeAuthenticatedRequest("GET", "/protected", jwt.MapClaims{"foo": "bar"}, expectedAlgorithm)
+			w := makeAuthenticatedRequest("GET", "/protected", jwt.StandardClaims{Audience: []string{"bar"}}, expectedAlgorithm)
 			So(w.Code, ShouldEqual, http.StatusOK)
 			responseBytes, err := ioutil.ReadAll(w.Body)
 			if err != nil {
@@ -66,7 +66,7 @@ func TestAuthenticatedRequest(t *testing.T) {
 		})
 		Convey("Authenticated GET to /protected path should return a 200 response if expected algorithm is correct", func() {
 			expectedAlgorithm := jwt.SigningMethodHS256
-			w := makeAuthenticatedRequest("GET", "/protected", jwt.MapClaims{"foo": "bar"}, expectedAlgorithm)
+			w := makeAuthenticatedRequest("GET", "/protected", jwt.StandardClaims{Audience: []string{"bar"}}, expectedAlgorithm)
 			So(w.Code, ShouldEqual, http.StatusOK)
 			responseBytes, err := ioutil.ReadAll(w.Body)
 			if err != nil {
@@ -78,7 +78,7 @@ func TestAuthenticatedRequest(t *testing.T) {
 		})
 		Convey("Authenticated GET to /protected path should return a 401 response if algorithm is not expected one", func() {
 			expectedAlgorithm := jwt.SigningMethodRS256
-			w := makeAuthenticatedRequest("GET", "/protected", jwt.MapClaims{"foo": "bar"}, expectedAlgorithm)
+			w := makeAuthenticatedRequest("GET", "/protected", jwt.StandardClaims{Audience: []string{"bar"}}, expectedAlgorithm)
 			So(w.Code, ShouldEqual, http.StatusUnauthorized)
 			responseBytes, err := ioutil.ReadAll(w.Body)
 			if err != nil {
@@ -188,13 +188,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// protectedHandler will return the content of the "foo" encoded data
+// protectedHandler will return the content of the Audience encoded data
 // in the token as json -> {"text":"bar"}
 func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve the token from the context
 	u := r.Context().Value(userPropertyName)
 	user := u.(*jwt.Token)
-	respondJSON(user.Claims.(jwt.MapClaims)["foo"].(string), w)
+	audString := strings.Join(user.Claims.(*jwt.StandardClaims).Audience, " ")
+	respondJSON(audString, w)
 }
 
 // Response quick n' dirty Response struct to be encoded as json
